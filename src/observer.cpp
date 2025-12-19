@@ -1,36 +1,40 @@
 #include "observer.hpp"
 #include <iostream>
 
-ConsoleObserver::ConsoleObserver() {
+void ConsoleObserver::on_fight(std::shared_ptr<NPC> attacker, 
+                              std::shared_ptr<NPC> defender, 
+                              bool win) {
+    if (win) {
+        std::cout << "[БОЙ] " << attacker->getName() 
+                  << " убил " << defender->getName() << std::endl;
+    }
 }
 
-void ConsoleObserver::update(const std::string& message) {
-    std::cout << "[СОБЫТИЕ] " << message << std::endl;
+std::shared_ptr<ConsoleObserver> ConsoleObserver::get() {
+    static auto instance = std::make_shared<ConsoleObserver>();
+    return instance;
 }
 
 FileObserver::FileObserver(const std::string& filename) {
-    logFile.open(filename, std::ios::app);
-    
-    if (!logFile.is_open()) {
-        std::cerr << "Ошибка: не удалось открыть файл " << filename << std::endl;
-    } else {
-        logFile << "=== ЛОГ СИМУЛЯЦИИ ===" << std::endl;
-    }
+    log_file.open(filename, std::ios::app);
 }
 
 FileObserver::~FileObserver() {
-    if (logFile.is_open()) {
-        logFile << "=== КОНЕЦ ЛОГА ===" << std::endl;
-        logFile.close();
+    if (log_file.is_open()) {
+        log_file.close();
     }
 }
 
-void FileObserver::update(const std::string& message) {
-    if (logFile.is_open()) {
-        logFile << message << std::endl;
+void FileObserver::on_fight(std::shared_ptr<NPC> attacker, 
+                           std::shared_ptr<NPC> defender, 
+                           bool win) {
+    if (win && log_file.is_open()) {
+        log_file << "[БОЙ] " << attacker->getName() 
+                 << " убил " << defender->getName() << std::endl;
     }
 }
 
-bool FileObserver::isFileOpen() const {
-    return logFile.is_open();
+std::shared_ptr<FileObserver> FileObserver::get() {
+    static auto instance = std::make_shared<FileObserver>("battle_log.txt");
+    return instance;
 }

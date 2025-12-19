@@ -3,8 +3,12 @@
 
 #include <vector>
 #include <memory>
+#include <string>
 #include "npc.hpp"
 #include "observer.hpp"
+
+// Forward declaration вместо инклуда
+class Observer;
 
 class DungeonEditor {
 private:
@@ -12,7 +16,7 @@ private:
     Observer* observer;
 
 public:
-    DungeonEditor(Observer* obs); 
+    DungeonEditor(Observer* obs = nullptr); 
     
     // Добавить NPC
     void addNPC(NPCType type, const std::string& name, double x, double y);
@@ -31,6 +35,7 @@ public:
     
     // Получить список NPC
     std::vector<std::shared_ptr<NPC>>& getNPCs() { return npcs; }
+    const std::vector<std::shared_ptr<NPC>>& getNPCs() const { return npcs; }
 };
 
 #endif

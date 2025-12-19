@@ -1,37 +1,32 @@
 #ifndef OBSERVER_HPP
 #define OBSERVER_HPP
 
-#include <string>
+#include "npc.hpp"
 #include <fstream>
+#include <memory>
 
-class Observer {
+class ConsoleObserver : public IFightObserver {
 public:
-    virtual ~Observer() = default;
+    void on_fight(std::shared_ptr<NPC> attacker, 
+                 std::shared_ptr<NPC> defender, 
+                 bool win) override;
     
-    // Метод для получения обновлений
-    virtual void update(const std::string& message) = 0;
+    static std::shared_ptr<ConsoleObserver> get();
 };
 
-class ConsoleObserver : public Observer {
-public:
-    ConsoleObserver();
-    void update(const std::string& message) override;
-};
-
-class FileObserver : public Observer {
+class FileObserver : public IFightObserver {
 private:
-    std::ofstream logFile;  // Файл для записи логов
+    std::ofstream log_file;
     
 public:
-    FileObserver(const std::string& filename);
-    
-    // Деструктор
+    FileObserver(const std::string& filename = "battle_log.txt");  // ← конструктор с параметром
     ~FileObserver();
     
-    void update(const std::string& message) override;
+    void on_fight(std::shared_ptr<NPC> attacker, 
+                 std::shared_ptr<NPC> defender, 
+                 bool win) override;
     
-    // Дополнительные методы
-    bool isFileOpen() const;
+    static std::shared_ptr<FileObserver> get();
 };
 
 #endif

@@ -14,12 +14,16 @@ set(SOURCE_FILES
     src/observer.cpp
     src/dragon.cpp
     src/knight.cpp
-    src/pegasus.cpp
-    src/visitor.cpp
+    src/pegasus.cpp  # ДОБАВЛЕНО
 )
 
-# Основное приложение
-add_executable(dungeon_editor main.cpp ${SOURCE_FILES})
+# Основное приложение - называется main
+add_executable(main main.cpp ${SOURCE_FILES})
+
+# Для многопоточности
+if(UNIX)
+    target_link_libraries(main pthread)
+endif()
 
 # Тесты с Google Test (скачиваем автоматически)
 include(FetchContent)
@@ -29,9 +33,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
-add_executable(dungeon_tests tests/tests.cpp ${SOURCE_FILES})
-target_link_libraries(dungeon_tests gtest gtest_main)
+# Тесты - называются tests
+add_executable(tests tests/tests.cpp ${SOURCE_FILES})
+target_link_libraries(tests gtest gtest_main)
+if(UNIX)
+    target_link_libraries(tests pthread)
+endif()
 
 # Для запуска тестов через ctest
 enable_testing()
-add_test(NAME DungeonTests COMMAND dungeon_tests)
+add_test(NAME DungeonTests COMMAND tests)

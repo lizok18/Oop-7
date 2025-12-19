@@ -1,42 +1,70 @@
 #ifndef NPC_HPP
 #define NPC_HPP
 
-#include <string>
+#include <iostream>
 #include <memory>
+#include <mutex>
+#include <vector>
+#include <string>
 
-// Типы NPC
-enum NPCType {
-    KNIGHT = 1,
-    DRAGON = 2,
-    PEGASUS = 3
-};
+// Forward declarations
+class IFightObserver;
+class Knight;
+class Dragon;
+class Pegasus;
 
-// Базовый класс NPC
-class NPC {
+enum class NPCType { KNIGHT, DRAGON, PEGASUS };
+
+class NPC : public std::enable_shared_from_this<NPC> {
 protected:
     NPCType type;
-    double x, y;
     std::string name;
+    double x, y;
     bool alive;
+    mutable std::mutex mtx;
+    std::vector<std::shared_ptr<IFightObserver>> observers;
 
 public:
-    NPC(NPCType t, double x, double y, const std::string& name);
+    NPC(NPCType t, const std::string& name, double x, double y);
     virtual ~NPC() = default;
     
-    // Геттеры
     NPCType getType() const { return type; }
+    std::string getName() const { return name; }
     double getX() const { return x; }
     double getY() const { return y; }
-    std::string getName() const { return name; }
     bool isAlive() const { return alive; }
     
-    // Методы
-    void kill() { alive = false; }
+    void setPosition(double newX, double newY);
     double distanceTo(const NPC* other) const;
-    bool isClose(const NPC* other, double range) const;
+    bool isClose(const NPC* other, double distance) const;
+    void kill() { alive = false; }
     
+    virtual void move();
     virtual void print() const = 0;
-    virtual bool fight(const NPC* other) = 0;
+    virtual char getSymbol() const = 0;
+    
+    // Visitor pattern
+    virtual bool accept(std::shared_ptr<NPC> attacker) = 0;
+    virtual bool fight(std::shared_ptr<NPC> other) = 0;
+    
+    // Visitor методы для конкретных типов
+    virtual bool visit(std::shared_ptr<Knight> other) = 0;
+    virtual bool visit(std::shared_ptr<Dragon> other) = 0;
+    virtual bool visit(std::shared_ptr<Pegasus> other) = 0;
+    
+    // Наблюдатели
+    void subscribe(std::shared_ptr<IFightObserver> observer);
+    void fight_notify(std::shared_ptr<NPC> defender, bool win);
+    
+    static int rollDice();
+};
+
+class IFightObserver {
+public:
+    virtual ~IFightObserver() = default;
+    virtual void on_fight(std::shared_ptr<NPC> attacker, 
+                         std::shared_ptr<NPC> defender, 
+                         bool win) = 0;
 };
 
 #endif

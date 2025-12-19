@@ -1,26 +1,35 @@
 #include "dragon.hpp"
+#include "knight.hpp"    // ← ДОБАВИТЬ
+#include "pegasus.hpp"   // ← ДОБАВИТЬ
 #include <iostream>
 
-Dragon::Dragon(double x, double y, const std::string& name)
-    : NPC(DRAGON, x, y, name) {}
+Dragon::Dragon(const std::string& name, double x, double y)
+    : NPC(NPCType::DRAGON, name, x, y) {}
 
 void Dragon::print() const {
-    std::cout << "Дракон " << name << " (" << x << ", " << y << ")" 
-              << (alive ? " - жив" : " - мертв") << std::endl;
+    std::cout << "Дракон '" << name << "' (" << x << ", " << y << ") "
+              << (alive ? "жив" : "мертв") << std::endl;
 }
 
-bool Dragon::fight(const NPC* other) {
-    switch(other->getType()) {
-        case KNIGHT:
-            // Дракон vs Рыцарь - слабость
-            return (rand() % 100) < 30;
-        case DRAGON:
-            // Дракон vs Дракон - шанс 50/50
-            return (rand() % 100) < 50;
-        case PEGASUS:
-            // Дракон vs Пегас - преимущество
-            return (rand() % 100) < 80;
-        default:
-            return false;
-    }
+bool Dragon::accept(std::shared_ptr<NPC> attacker) {
+    return attacker->fight(shared_from_this());
+}
+
+bool Dragon::fight(std::shared_ptr<NPC> other) {
+    return other->visit(std::dynamic_pointer_cast<Dragon>(shared_from_this()));
+}
+
+bool Dragon::visit(std::shared_ptr<Knight> other) {
+    fight_notify(other, false);
+    return false;
+}
+
+bool Dragon::visit(std::shared_ptr<Dragon> other) {
+    fight_notify(other, false);
+    return false;
+}
+
+bool Dragon::visit(std::shared_ptr<Pegasus> other) {
+    fight_notify(other, true);
+    return true;
 }
